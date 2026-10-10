@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Salına · 3D Tasarım ve Veriler</title>
+<meta name="description" content="Salına: kum dolu, yosundan yapılmış, 4–5 haftada eriyen geçici yapay deniz çayırı. COP31 Gençlik İklim İdeathonu.">
+<meta name="theme-color" content="#04161d">
+<meta property="og:title" content="Salına · 3D Tasarım ve Veriler">
+<meta property="og:description" content="25 cm kum dolu top, 36 adet 50 cm alginat yaprak. Dalga, basınç, mikroalg ve erime verileri.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 3D model (içinde canlı dalga ve basınç göstergesi) + sağda kontroller; altında 6 veri grafiği, teknik çizim, erime ve kaynaklar. Tek, bilinçli koyu deniz teması. */
+:root {
+  --deep: #04161d;
+  --panel: #0a2630;
+  --line: #1b4552;
+  --ink: #e6f1ec;
+  --muted: #8fb0aa;
+  --alginate: #e2c67a;
+  --kelp: #8cc66b;
+  --sand: #cdb68a;
+  --cg: #ff7d5e;
+  --cb: #6fd3f0;
+  --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--deep); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1260px; margin: 0 auto; padding-inline: 20px; padding-block: 26px 56px; display: grid; gap: 26px; }
+header { display: grid; gap: 8px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--alginate); }
+h1 { font-family: var(--f-display); font-stretch: 112%; font-weight: 800; font-size: clamp(38px, 7vw, 76px); line-height: .95; margin: 0; letter-spacing: -.02em; text-transform: uppercase; }
+h1 span { color: var(--alginate); }
+.lede { margin: 4px 0 0; max-width: 76ch; color: var(--muted); font-size: 16px; }
+.lede b { color: var(--ink); font-weight: 600; }
+h2 { font-family: var(--f-display); font-stretch: 112%; font-weight: 800; font-size: clamp(21px, 2.6vw, 28px); text-transform: uppercase; margin: 0; }
+.label { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+section { display: grid; gap: 14px; }
+
+.top { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 18px; align-items: stretch; }
+@media (max-width: 960px) { .top { grid-template-columns: minmax(0, 1fr); } }
+.view { position: relative; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #072431; height: clamp(420px, 66vh, 680px); }
+#gl { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.badge { position: absolute; left: 12px; top: 12px; padding: 8px 12px; background: rgba(4,22,29,.8); border: 1px solid var(--line); border-radius: 10px; pointer-events: none; display: grid; gap: 2px; }
+.badge .w { font-family: var(--f-display); font-stretch: 112%; font-weight: 800; font-size: 24px; line-height: 1; }
+.badge .s { font-size: 13px; color: var(--alginate); }
+.badge .p { font-family: var(--f-mono); font-size: 12px; color: var(--cb); }
+.zoom { position: absolute; right: 12px; top: 12px; display: grid; gap: 6px; }
+.zoom .btn { width: 36px; height: 36px; padding: 0; font-size: 18px; background: rgba(4,22,29,.75); }
+.hint { position: absolute; right: 12px; bottom: 10px; font-size: 12px; color: var(--muted); pointer-events: none; text-align: right; }
+
+.side { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 13px; align-content: start; min-width: 0; }
+.ctl { display: grid; gap: 5px; }
+.ctl .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ctl output { font-family: var(--f-mono); color: var(--alginate); font-size: 13px; font-variant-numeric: tabular-nums; }
+.ctl input[type=range] { width: 100%; accent-color: var(--alginate); }
+.btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn { font: 500 13px var(--f-body); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px; cursor: pointer; }
+.btn.primary { background: var(--alginate); color: #2a1e00; border-color: var(--alginate); font-weight: 600; }
+.btn[aria-pressed="true"] { background: var(--line); }
+.btn:focus-visible, input:focus-visible { outline: 2px solid var(--alginate); outline-offset: 2px; }
+.nums { display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 11px; }
+.nums .r { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; }
+.nums .r span { color: var(--muted); }
+.nums .r b { font-family: var(--f-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.state { padding: 10px 12px; border-radius: 9px; border: 1px solid var(--line); font-size: 13.5px; }
+.state b { display: block; margin-bottom: 2px; }
+.state[data-k="float"] { border-color: var(--cb); } .state[data-k="float"] b { color: var(--cb); }
+.state[data-k="ground"] { border-color: var(--alginate); } .state[data-k="ground"] b { color: var(--alginate); }
+.state[data-k="still"] { border-color: var(--cg); } .state[data-k="still"] b { color: var(--cg); }
+
+.charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1000px) { .charts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .charts { grid-template-columns: minmax(0, 1fr); } }
+.ch { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 14px 12px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.ch h3 { margin: 0; font-size: 15.5px; font-weight: 600; }
+.ch .big { font-family: var(--f-mono); font-size: 20px; color: var(--alginate); font-variant-numeric: tabular-nums; }
+.ch .big small { font-size: 12px; color: var(--muted); }
+.ch canvas { display: block; width: 100%; height: 170px; }
+.ch .src { font-size: 12px; color: var(--muted); line-height: 1.45; }
+.ch .src b { color: var(--ink); font-weight: 500; }
+.tag { display: inline-block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .05em; padding: 1px 7px; border-radius: 99px; border: 1px solid; margin-left: 6px; vertical-align: 2px; }
+.tag.calc { color: var(--cb); border-color: var(--cb); }
+.tag.src { color: var(--kelp); border-color: var(--kelp); }
+.tag.model { color: var(--cg); border-color: var(--cg); }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile { border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; display: grid; gap: 2px; min-width: 0; }
+.tile .v { font-family: var(--f-mono); font-size: 16px; }
+.tile .k { font-size: 12px; color: var(--muted); }
+
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; min-width: 0; }
+.card svg { display: block; width: 100%; height: auto; max-width: 100%; }
+.specs { width: 100%; border-collapse: collapse; font-size: 14px; }
+.specs td { padding: 8px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.specs td:first-child { color: var(--muted); width: 42%; }
+.specs td:last-child { font-family: var(--f-mono); font-size: 13.5px; }
+.specs tr:last-child td { border-bottom: 0; }
+.tl { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+@media (max-width: 820px) { .tl { grid-template-columns: minmax(0, 1fr); } .tl > div { border-right: 0 !important; border-bottom: 1px solid var(--line); } .tl > div:last-child { border-bottom: 0; } }
+.tl > div { padding: 12px 14px; border-right: 1px solid var(--line); display: grid; gap: 3px; align-content: start; }
+.tl > div:last-child { border-right: 0; }
+.tl .n { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.tl b { font-weight: 600; }
+.tl p { margin: 0; font-size: 13.5px; color: var(--muted); }
+.tl .on { background: var(--panel); } .tl .on .n { color: var(--alginate); }
+.refs { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 13.5px; color: var(--muted); max-width: 110ch; }
+.refs b { color: var(--ink); font-weight: 500; }
+.refs a { color: var(--cb); }
+.concl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 820px) { .concl { grid-template-columns: minmax(0, 1fr); } }
+.concl > div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 6px; }
+.concl p { margin: 0; font-size: 14.5px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">COP31 İklim İdeathonu · 3D model ve veriler</div>
+    <h1>Salı<span>na</span></h1>
+    <p class="lede"><b>25 cm’lik kum dolu top, her yöne açılan 36 adet 50 cm’lik yaprak.</b> Gövde deniz kestanesinden, yaprakların salınımı deniz çayırından. Model deniz tabanında dalgayla hareket ediyor; altındaki grafikler dalga, basınç, kum miktarı, mikroalg, canlılar, oksijen ve karbon değerlerini gösteriyor. Her grafiğin hesap mı, kaynak verisi mi, yoksa temsili model mi olduğu etiketinde yazıyor.</p>
+    <div class="legend"><span><span class="tag calc">HESAP</span> fizik formülüyle hesaplandı</span><span><span class="tag src">KAYNAK</span> yayımlanmış ölçüm</span><span><span class="tag model">TEMSİLİ</span> ölçülmedi, deneyle doğrulanacak</span></div>
+  </header>
+
+  <div class="top">
+    <div class="view">
+      <canvas id="gl" aria-label="Salına 3D modeli deniz tabanında, içinde canlı dip akıntısı grafiği"></canvas>
+      <div class="badge"><div class="w" id="bW">HAFTA 0</div><div class="s" id="bS">Bırakıldı</div><div class="p" id="bP"></div></div>
+      <div class="zoom"><button class="btn" id="zin" type="button" aria-label="Yakınlaştır">+</button><button class="btn" id="zout" type="button" aria-label="Uzaklaştır">−</button></div>
+      <div class="hint">Beyaz çubuk = 50 cm<br>Sürükle: döndür · Kaydır: yakınlaş</div>
+    </div>
+    <aside class="side" aria-label="Kontroller ve hesaplar">
+      <div class="ctl">
+        <div class="row"><label class="label" for="wk">Zaman</label><output id="wkO">Hafta 0</output></div>
+        <input id="wk" type="range" min="0" max="5" step="0.05" value="0">
+        <div class="btns"><button class="btn primary" id="playW" type="button">Haftaları oynat</button><button class="btn" id="rot" type="button" aria-pressed="false">Otomatik döndür</button></div>
+      </div>
+      <div class="ctl">
+        <div class="row"><label class="label" for="hH">Dalga yüksekliği</label><output id="hO">1,0 m</output></div>
+        <input id="hH" type="range" min="0.3" max="2" step="0.1" value="1">
+      </div>
+      <div class="ctl">
+        <div class="row"><label class="label" for="dD">Derinlik</label><output id="dO">10 m</output></div>
+        <input id="dD" type="range" min="5" max="15" step="1" value="10">
+      </div>
+      <div class="ctl">
+        <div class="row"><label class="label" for="sK">İçteki kum</label><output id="sO">0,82 kg</output></div>
+        <input id="sK" type="range" min="0.2" max="3.5" step="0.02" value="0.82">
+      </div>
+      <div class="state" id="st" data-k="float"><b id="stT"></b><span id="stD"></span></div>
+      <div class="nums">
+        <div class="r"><span>Dip akıntısı U</span><b id="nU"></b></div>
+        <div class="r"><span>Dalganın itmesi F</span><b id="nF"></b></div>
+        <div class="r"><span>Tabanda sürtünme</span><b id="nR"></b></div>
+        <div class="r"><span>Su içi net ağırlık</span><b id="nWt"></b></div>
+        <div class="r"><span>Batma hızı w</span><b id="nW"></b></div>
+        <div class="r"><span>Su basıncı (mutlak)</span><b id="nP"></b></div>
+      </div>
+    </aside>
+  </div>
+
+  <section aria-labelledby="t-v">
+    <h2 id="t-v">Veriler</h2>
+    <div class="charts">
+      <div class="ch">
+        <h3>Dalga ve dip akıntısı <span class="tag calc">HESAP</span></h3>
+        <div class="big" id="kU"></div>
+        <canvas id="cU" aria-label="Dipteki su hızı zamana göre"></canvas>
+        <div class="src"><b>U = (H/2)·ω / sinh(kh)</b>, dağılım bağıntısı ω² = g·k·tanh(kh). Doğrusal dalga teorisi, periyot T = 6 s. Turuncu kesik çizgi topun batma hızı: akıntı bu çizgiyi geçtikçe top kalkar. Sarı nokta canlı.</div>
+      </div>
+      <div class="ch">
+        <h3>Su basıncı ve derinlik <span class="tag calc">HESAP</span></h3>
+        <div class="big" id="kP"></div>
+        <canvas id="cP" aria-label="Su basıncı derinliğe göre"></canvas>
+        <div class="src"><b>p = p<sub>atm</sub> + ρ·g·h</b>, ρ = 1025 kg/m³. Dalganın dipte yarattığı ek basınç ±ρ·g·(H/2)/cosh(kh). Kabuk delikli olduğu için içi ve dışı aynı basınçta, ezilmez.</div>
+      </div>
+      <div class="ch">
+        <h3>Kum miktarı ve hareket <span class="tag calc">HESAP</span></h3>
+        <div class="big" id="kS"></div>
+        <canvas id="cS" aria-label="Kum miktarına göre topun davranışı"></canvas>
+        <div class="src"><b>W = m·(1 − ρ<sub>su</sub>/ρ<sub>kum</sub>)</b>, kum tanesi 2,65 g/cm³. Hareket eşiği F = μ·W·g (μ = 0,3 varsayım). Süzülme eşiği w = U, w = √(2Wg/(ρ·Cd·A)), Cd·A ≈ 0,11 m².</div>
+      </div>
+      <div class="ch">
+        <h3>Yapraklarda mikroalg <span class="tag src">KAYNAK</span> <span class="tag model">EĞRİ TEMSİLİ</span></h3>
+        <div class="big" id="kB"></div>
+        <canvas id="cB" aria-label="Yaprak yüzeyindeki mikroalg yoğunluğu haftalara göre"></canvas>
+        <div class="src">Ay sonu değeri <b>6,1×10⁵ diatom/cm²</b>: Adriyatik, 5 m, yapay yüzey, 1 ay. Yaprak yüzeyi 36 × 50 cm × 1 cm × 2 yüz = <b>0,36 m²</b>. Aradaki eğri ve erime etkisi temsilidir.</div>
+      </div>
+      <div class="ch">
+        <h3>Gelen canlılar <span class="tag model">TEMSİLİ</span></h3>
+        <div class="big" id="kF"></div>
+        <canvas id="cF" aria-label="Yapay çayıra canlı yerleşimi haftalara göre"></canvas>
+        <div class="src">Yapay çayır denemelerinde, gerçek çayır canlıları yaklaşık <b>6 haftada</b> yerleşmiş, birey sayısı gerçek çayırla benzer çıkmış (Macquarie Üniv.). Salına’nın eğrisi ölçülmedi; sahada sayımla belirlenecek.</div>
+      </div>
+      <div class="ch">
+        <h3>Oksijen ve karbon <span class="tag src">KAYNAK</span> <span class="tag calc">HESAP</span></h3>
+        <div class="tiles">
+          <div class="tile"><span class="v">14 L/m²·gün</span><span class="k">Posidonia çayırı oksijen üretimi (TÜDAV)</span></div>
+          <div class="tile"><span class="v">ölçülecek</span><span class="k">Salına biyofilminin oksijeni, sensörle ölçülecek</span></div>
+          <div class="tile"><span class="v">≈ 1,6 t C/ha·yıl</span><span class="k">Türkiye çayırları: 150 bin t C ÷ 95.500 ha (TÜDAV)</span></div>
+          <div class="tile"><span class="v">≈ 22 g C</span><span class="k">Bir topun alginatındaki karbon: 60 g × %36. Yosun kökenli, bakterilerce geri döner</span></div>
+        </div>
+        <div class="src">Salına kalıcı karbon depolamaz ve kendi başına anlamlı oksijen üretmez. Görevi geçici yaşam alanı sağlamak. Kalıcı karbonu gerçek çayır tutar.</div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-d">
+    <h2 id="t-d">Teknik çizim</h2>
+    <div class="grid2">
+      <div class="card">
+        <svg viewBox="0 0 560 520" role="img" aria-label="Salına ölçekli yan görünüş, 1 cm = 6 piksel">
+          <defs>
+            <clipPath id="ball"><circle cx="250" cy="372" r="75"/></clipPath>
+            <marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8fb0aa"/></marker>
+          </defs>
+          <rect x="0" y="447" width="560" height="73" fill="#5a4a36"/>
+          <text x="14" y="490" fill="#e8dcc4" font-family="IBM Plex Mono, monospace" font-size="11">DENİZ TABANI · ölü matte</text>
+          <g fill="none" stroke="#e2c67a" stroke-width="5" stroke-linecap="round" opacity=".9">
+            <path d="M250 297 C 252 220, 244 140, 258 0"/><path d="M206 311 C 180 240, 172 160, 190 30"/><path d="M294 311 C 320 240, 330 160, 316 30"/>
+            <path d="M178 345 C 120 300, 108 220, 118 75"/><path d="M322 345 C 380 300, 395 220, 384 75"/>
+            <path d="M176 395 C 110 400, 70 360, 52 230"/><path d="M324 395 C 390 400, 432 360, 450 230"/>
+            <path d="M196 428 C 150 446, 100 446, 30 444"/><path d="M304 428 C 350 446, 400 446, 470 444"/>
+          </g>
+          <circle cx="250" cy="372" r="75" fill="#d8c7a0" fill-opacity=".35" stroke="#e6d6b4" stroke-width="2"/>
+          <circle cx="250" cy="372" r="66" fill="none" stroke="#e6d6b4" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>
+          <g clip-path="url(#ball)"><rect x="170" y="414" width="160" height="40" fill="#cdb68a"/></g>
+          <g fill="none" stroke="#e6d6b4" stroke-width="1.2" opacity=".7"><ellipse cx="250" cy="372" rx="26" ry="75"/><ellipse cx="250" cy="372" rx="56" ry="75"/></g>
+          <circle cx="250" cy="372" r="6" fill="#6fd3f0"/><circle cx="250" cy="429" r="6" fill="#ff7d5e"/>
+          <g stroke="#8fb0aa" stroke-width="1" fill="#8fb0aa" font-family="IBM Plex Mono, monospace" font-size="12">
+            <line x1="175" y1="470" x2="325" y2="470" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="222" y="488" stroke="none">Ø 25 cm</text>
+            <line x1="500" y1="2" x2="500" y2="297" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="506" y="150" stroke="none">50 cm</text>
+            <line x1="340" y1="414" x2="340" y2="447" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="346" y="436" stroke="none">kum 3,9 cm</text>
+          </g>
+          <g transform="translate(18 14)"><rect x="0" y="0" width="150" height="74" rx="8" fill="#0a2630" stroke="#1b4552"/><text x="10" y="18" fill="#8fb0aa" font-family="IBM Plex Mono, monospace" font-size="10">YAPRAK KESİTİ ×10</text><rect x="25" y="32" width="100" height="20" rx="10" fill="#e2c67a" opacity=".9"/><text x="44" y="68" fill="#e6f1ec" font-family="IBM Plex Mono, monospace" font-size="10">10 mm × 2 mm</text></g>
+          <g font-family="IBM Plex Sans, sans-serif" font-size="12"><text x="20" y="508" fill="#ff7d5e">● ağırlık merkezi</text><text x="150" y="508" fill="#6fd3f0">● kaldırma merkezi</text><text x="290" y="508" fill="#8fb0aa">ölçek: 1 cm = 6 px · kum 0,82 kg</text></g>
+        </svg>
+      </div>
+      <div class="card">
+        <table class="specs"><tbody>
+          <tr><td>Gövde</td><td>Küre, Ø 25 cm, hacim 8,2 L</td></tr>
+          <tr><td>Kabuk</td><td>Alginat + kum, delikli; içi deniz suyuyla dolar</td></tr>
+          <tr><td>İçteki kum</td><td>0,82 kg (≈ 0,5 L), altta 3,9 cm</td></tr>
+          <tr><td>Su içi net ağırlık</td><td>≈ 0,5 kg</td></tr>
+          <tr><td>Yapraklar</td><td>36 adet, 50 cm × 1 cm × 2 mm</td></tr>
+          <tr><td>Yaprak malzemesi</td><td>Köpüklü kalsiyum alginat + gliserin, 0,95–0,98 g/cm³</td></tr>
+          <tr><td>Yaprak yüzeyi</td><td>0,36 m², 20–50 µm mikro doku</td></tr>
+          <tr><td>Toplam alginat</td><td>≈ 60 g kuru toz</td></tr>
+          <tr><td>Birim maliyet</td><td>≈ 110–120 TL</td></tr>
+          <tr><td>Denizde kalan</td><td>Yalnızca bölgenin kendi kumu</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-e">
+    <h2 id="t-e">Erime</h2>
+    <div class="tl" id="tl">
+      <div data-a="0" data-b="1"><span class="n">Hafta 0–1</span><b>Bırakma</b><p>Ölü matte alana bırakılır, dalgayla hareket eder.</p></div>
+      <div data-a="1" data-b="2"><span class="n">Hafta 1–2</span><b>Biyofilm</b><p>Önce bakteriler, sonra diatomlar yapraklara tutunur.</p></div>
+      <div data-a="2" data-b="3"><span class="n">Hafta 2–3</span><b>Yaşam</b><p>Kabuklular ve yavru balıklar gelir.</p></div>
+      <div data-a="3" data-b="4"><span class="n">Hafta 3–4</span><b>Yapraklar erir</b><p>Hedef süre; tuzlu su şerit deneyiyle doğrulanacak.</p></div>
+      <div data-a="4" data-b="5"><span class="n">Hafta 4–5</span><b>Kabuk erir</b><p>Hedef süre; geriye kum kalır.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-s">
+    <h2 id="t-s">Sonuç</h2>
+    <div class="concl">
+      <div><span class="label">Hareket</span><p>Motor ve pil yok. 1 m dalgada dipteki 0,31 m/s akıntı topa 5,4 N itme uygular; 0,82 kg kumla top dalgayla süzülerek ilerler.</p></div>
+      <div><span class="label">Yaşam</span><p>0,36 m² yaprak yüzeyi bir ayda yaklaşık 2 milyar mikroalgin tutunabileceği bir alan sağlar. Mikroalgleri küçük kabuklular, onları balıklar yer.</p></div>
+      <div><span class="label">İz</span><p>Hedef 4–5 haftada erimek; geriye yalnızca bölgenin kumu kalır. Süre tuzlu su deneyiyle doğrulanacak. Top başına maliyet ≈ 110–120 TL.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-k">
+    <h2 id="t-k">Kaynaklar</h2>
+    <ol class="refs">
+      <li><b>Dalga ve basınç hesapları:</b> doğrusal (Airy) dalga teorisi ve hidrostatik basınç, ders kitabı formülleri. Sürüklenme kuvveti F = ½ρCdAU².</li>
+      <li><b>Mikroalg yoğunluğu:</b> Adriyatik’te yapay yüzeylerde bakteri ve diatom kolonizasyonu, 1 ayda 6,10×10⁵ hücre/cm² (<a href="https://hrcak.srce.hr/en/146037" target="_blank" rel="noopener">Hrčak</a>).</li>
+      <li><b>Mikroalglerin tutunması:</b> Scardino, Harvey, de Nys (2006), Biofouling 22(1): tutunma noktası çok olan dokuya daha çok yapışma (<a href="https://researchonline.jcu.edu.au/3945/" target="_blank" rel="noopener">JCU</a>).</li>
+      <li><b>Canlı yerleşimi:</b> Yapay deniz çayırı denemeleri, 6 hafta (<a href="https://researchers.mq.edu.au/en/publications/artificial-seagrass-how-useful-is-it-for-field-experiments-on-fis/" target="_blank" rel="noopener">Macquarie Üniversitesi</a>).</li>
+      <li><b>Oksijen:</b> 1 m² Posidonia günde 14 L oksijen üretir, TÜDAV (<a href="https://www.gzt.com/gundem/marmara-denizinin-akcigerleri-koruma-altina-aliniyor-3769908" target="_blank" rel="noopener">GZT</a>).</li>
+      <li><b>Karbon:</b> Türkiye çayırları 95.500 ha, yılda 150 bin ton karbon, TÜDAV (<a href="https://www.trthaber.com/haber/bilim-teknoloji/turkiyenin-deniz-cayirlari-150-bin-ton-karbon-tutuyor-910983.html" target="_blank" rel="noopener">TRT Haber</a>).</li>
+      <li><b>Alginatın tuzlu suda çözünmesi:</b> Ashmarad, Beckman, Fullerton-Shirey (2025), RSC (<a href="https://pubs.rsc.org/en/content/articlehtml/2025/gc/d5gc02866c" target="_blank" rel="noopener">makale</a>); Castro ve ark. (2025), Scientific Reports (<a href="https://www.nature.com/articles/s41598-025-22427-y" target="_blank" rel="noopener">makale</a>).</li>
+      <li><b>Varsayımlar:</b> tabanda sürtünme katsayısı μ = 0,3; etkin Cd·A ≈ 0,11 m²; alginat elastisite modülü ≈ 100 kPa. Bunlar dalga tankında ölçülecek.</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const RHO = 1025, G = 9.81, T = 6, CDA = 0.111, MU = 0.3, RS = 2650, PATM = 101325;
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const ss = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+  const fmt = (v, d) => v.toFixed(d).replace('.', ',');
+  const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const S = { week: 0, H: 1, D: 10, sand: 0.82, playW: false, rot: false };
+  let W = {};
+
+  function waveAt(H, D) {
+    const w = 2 * Math.PI / T; let lo = 1e-5, hi = 20;
+    for (let i = 0; i < 80; i++) { const k = (lo + hi) / 2; (G * k * Math.tanh(k * D) > w * w) ? hi = k : lo = k; }
+    const k = (lo + hi) / 2; return { w, k, U: (H / 2) * w / Math.sinh(k * D) };
+  }
+  // sand cap height inside inner sphere (Ri = 0.11) for bulk volume (1600 kg/m3)
+  function capHeight(m) {
+    const V = m / 1600, Ri = 0.11; let lo = 0, hi = 2 * Ri;
+    for (let i = 0; i < 50; i++) { const h = (lo + hi) / 2; (Math.PI * h * h * (3 * Ri - h) / 3 > V) ? hi = h : lo = h; }
+    return (lo + hi) / 2;
+  }
+  function wave() {
+    const { w, k, U } = waveAt(S.H, S.D);
+    const Wn = S.sand * (1 - RHO / RS);
+    const F = 0.5 * RHO * CDA * U * U, R = MU * Wn * G, ws = Math.sqrt(2 * Wn * G / (RHO * CDA));
+    const pAbs = PATM + RHO * G * S.D, pDyn = RHO * G * (S.H / 2) / Math.cosh(k * S.D);
+    W = { w, k, U, A: U / w, F, R, ws, Wn, pAbs, pDyn, lift: clamp((U - ws) / (0.35 * U) + 0.15), capH: capHeight(S.sand),
+          sandMove: F / (MU * G) / (1 - RHO / RS), sandFloat: U * U * RHO * CDA / (2 * G) / (1 - RHO / RS) };
+    $('nU').textContent = fmt(U, 2) + ' m/s'; $('nF').textContent = fmt(F, 1) + ' N'; $('nR').textContent = fmt(R, 1) + ' N';
+    $('nWt').textContent = fmt(Wn, 2) + ' kg'; $('nW').textContent = fmt(ws, 2) + ' m/s'; $('nP').textContent = fmt(pAbs / PATM, 2) + ' atm';
+    $('bP').textContent = `Derinlik ${S.D} m · ${fmt(pAbs / PATM, 2)} atm`;
+    const st = $('st');
+    if (F < R) { st.dataset.k = 'still'; $('stT').textContent = 'Hareketsiz'; $('stD').textContent = 'Dalganın itmesi tabandaki sürtünmeden küçük. Yapraklar salınır ama top yerinde kalır.'; }
+    else if (ws < U) { st.dataset.k = 'float'; $('stT').textContent = 'Süzülüyor'; $('stD').textContent = 'Batma hızı dip akıntısından küçük: top dalgayla kalkıp suyun içinde süzülür.'; }
+    else { st.dataset.k = 'ground'; $('stT').textContent = 'Tabanda yuvarlanıyor'; $('stD').textContent = 'Top tabana yakın kalır, dalgayla ileri geri yuvarlanır. Daha kontrollü.'; }
+    $('hO').textContent = fmt(S.H, 1) + ' m'; $('dO').textContent = S.D + ' m'; $('sO').textContent = fmt(S.sand, 2) + ' kg';
+    $('kU').innerHTML = `${fmt(U, 2)} <small>m/s · su ${fmt(W.A * 100, 0)} cm gidip gelir · dalga boyu ${fmt(2 * Math.PI / k, 0)} m</small>`;
+    $('kP').innerHTML = `${fmt(pAbs / 1000, 0)} kPa <small>= ${fmt(pAbs / PATM, 2)} atm · dalga etkisi ±${fmt(pDyn / 1000, 1)} kPa</small>`;
+    $('kS').innerHTML = `${fmt(Wn, 2)} kg <small>net ağırlık · süzülme < ${fmt(W.sandFloat, 2)} kg kum · hareket < ${fmt(W.sandMove, 1)} kg kum</small>`;
+    staticCharts();
+  }
+
+  const phase = w => w < 1 ? 'Bırakıldı, dalgayla hareket ediyor' : w < 2 ? 'Yapraklarda mikroalg' : w < 3 ? 'Balıklar ve kabuklular geldi' : w < 4 ? 'Yapraklar eriyor' : w < 4.95 ? 'Kabuk eriyor' : 'Geriye yalnızca kum kaldı';
+  const tlItems = [...document.querySelectorAll('#tl > div')];
+  const leafKf = w => 1 - ss(3, 4, w);
+  const dens = w => 6.1e5 / (1 + Math.exp(-(w - 2) / 0.5));           // diatom/cm2, ay sonu ~6,1e5
+  const cells = w => dens(w) * 3600 * leafKf(w);                         // 0,36 m2 = 3600 cm2
+  const fauna = w => (1 - Math.exp(-w / 2.2)) * (1 - ss(3.4, 4.6, w));   // temsili
+  function ui() {
+    $('wkO').textContent = 'Hafta ' + fmt(S.week, 1); $('wk').value = S.week;
+    $('bW').textContent = 'HAFTA ' + Math.floor(S.week); $('bS').textContent = phase(S.week);
+    tlItems.forEach(d => d.classList.toggle('on', S.week >= +d.dataset.a && (S.week < +d.dataset.b || (+d.dataset.b === 5 && S.week >= 5))));
+    $('kB').innerHTML = `${(cells(S.week) / 1e9).toFixed(2).replace('.', ',')} milyar <small>diatom · ${fmt(dens(S.week) / 1e5, 1)}×10⁵ /cm²</small>`;
+    $('kF').innerHTML = `%${Math.round(fauna(S.week) * 100)} <small>gerçek çayır topluluğuna göre (temsili)</small>`;
+    weekCharts();
+  }
+
+  // ---------- small chart helper ----------
+  const FONT = '500 10px "IBM Plex Mono", monospace';
+  function chart(id, o) {
+    const cv = $(id), r = cv.getBoundingClientRect(); if (!r.width) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (cv.width !== Math.round(r.width * dpr)) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); }
+    const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, r.width, r.height);
+    const pl = 40, pr = 10, pt = 8, pb = 22, w = r.width - pl - pr, h = r.height - pt - pb;
+    const X = x => pl + (x - o.x0) / (o.x1 - o.x0) * w, Y = y => pt + h - (y - o.y0) / (o.y1 - o.y0) * h;
+    (o.bands || []).forEach(b => { c.fillStyle = b.c; const a = X(clamp(b.a, o.x0, o.x1)), e = X(clamp(b.b, o.x0, o.x1)); c.fillRect(a, pt, e - a, h); if (b.t && e - a > 34) { c.fillStyle = b.tc; c.font = FONT; c.fillText(b.t, a + 4, pt + 12); } });
+    c.strokeStyle = '#1b4552'; c.lineWidth = 1; c.font = FONT; c.fillStyle = '#8fb0aa';
+    o.yt.forEach(v => { c.beginPath(); c.moveTo(pl, Y(v)); c.lineTo(pl + w, Y(v)); c.stroke(); c.fillText(o.yf ? o.yf(v) : String(v), 2, Y(v) + 3); });
+    o.xt.forEach(v => { const s = o.xf ? o.xf(v) : String(v); c.fillText(s, X(v) - c.measureText(s).width / 2, pt + h + 15); });
+    (o.series || []).forEach(s => {
+      c.strokeStyle = s.c; c.lineWidth = s.w || 2; c.setLineDash(s.d || []); c.beginPath();
+      s.p.forEach(([x, y], i) => i ? c.lineTo(X(x), Y(y)) : c.moveTo(X(x), Y(y))); c.stroke(); c.setLineDash([]);
+    });
+    (o.marks || []).forEach(m => { c.fillStyle = m.c; c.beginPath(); c.arc(X(m.x), Y(m.y), 4.5, 0, 7); c.fill(); if (m.v) { c.strokeStyle = m.c; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(X(m.x), pt); c.lineTo(X(m.x), pt + h); c.stroke(); c.setLineDash([]); } });
+  }
+  const rng = (a, b, n, f) => Array.from({ length: n + 1 }, (_, i) => { const x = a + (b - a) * i / n; return [x, f(x)]; });
+
+  function staticCharts() {
+    // pressure vs depth
+    const pts = rng(0, 20, 40, d => (PATM + RHO * G * d) / PATM);
+    chart('cP', { x0: 0, x1: 20, y0: 0, y1: 3.2, xt: [0, 5, 10, 15, 20], xf: v => v + ' m', yt: [0, 1, 2, 3], yf: v => v + ' atm',
+      series: [{ p: pts, c: '#6fd3f0' }], marks: [{ x: S.D, y: W.pAbs / PATM, c: '#e2c67a', v: true }] });
+    // sand vs net weight with regimes
+    const sMax = 4;
+    chart('cS', { x0: 0, x1: sMax, y0: 0, y1: 2.5, xt: [0, 1, 2, 3, 4], xf: v => v + ' kg', yt: [0, 1, 2], yf: v => v + ' kg',
+      bands: [{ a: 0, b: W.sandFloat, c: 'rgba(111,211,240,.14)', t: 'süzülür', tc: '#6fd3f0' }, { a: W.sandFloat, b: W.sandMove, c: 'rgba(226,198,122,.12)', t: 'yuvarlanır', tc: '#e2c67a' }, { a: W.sandMove, b: sMax, c: 'rgba(255,125,94,.12)', t: 'hareketsiz', tc: '#ff7d5e' }],
+      series: [{ p: rng(0, sMax, 20, m => m * (1 - RHO / RS)), c: '#e6f1ec' }], marks: [{ x: S.sand, y: W.Wn, c: '#e2c67a', v: true }] });
+  }
+  function weekCharts() {
+    chart('cB', { x0: 0, x1: 5, y0: 0, y1: 7, xt: [0, 1, 2, 3, 4, 5], xf: v => v + '. h', yt: [0, 2, 4, 6], yf: v => v + '×10⁵',
+      bands: [{ a: 3, b: 5, c: 'rgba(255,125,94,.08)', t: 'yaprak erir', tc: '#ff9e85' }],
+      series: [{ p: rng(0, 5, 50, w => dens(w) / 1e5), c: '#8cc66b' }, { p: rng(0, 5, 50, w => cells(w) / 3600 / 1e5), c: '#8cc66b', d: [4, 4], w: 1.5 }],
+      marks: [{ x: S.week, y: cells(S.week) / 3600 / 1e5, c: '#e2c67a', v: true }] });
+    chart('cF', { x0: 0, x1: 5, y0: 0, y1: 100, xt: [0, 1, 2, 3, 4, 5], xf: v => v + '. h', yt: [0, 50, 100], yf: v => '%' + v,
+      series: [{ p: rng(0, 5, 50, w => fauna(w) * 100), c: '#ff9e85', d: [5, 4] }], marks: [{ x: S.week, y: fauna(S.week) * 100, c: '#e2c67a', v: true }] });
+  }
+
+  // controls
+  $('wk').addEventListener('input', e => { S.week = +e.target.value; S.playW = false; $('playW').textContent = 'Haftaları oynat'; ui(); });
+  $('hH').addEventListener('input', e => { S.H = +e.target.value; wave(); });
+  $('dD').addEventListener('input', e => { S.D = +e.target.value; wave(); });
+  $('sK').addEventListener('input', e => { S.sand = +e.target.value; wave(); });
+  $('playW').addEventListener('click', () => { if (S.week >= 5) S.week = 0; S.playW = !S.playW; $('playW').textContent = S.playW ? 'Durdur' : 'Haftaları oynat'; });
+  $('rot').addEventListener('click', () => { S.rot = !S.rot; $('rot').setAttribute('aria-pressed', String(S.rot)); });
+  new ResizeObserver(() => { staticCharts(); weekCharts(); }).observe(document.querySelector('.charts'));
+
+  // ---------- 3D ----------
+  const cv = $('gl'), ctx = cv.getContext('2d');
+  let CW = 0, CH = 0;
+  function size() { const dpr = Math.min(2, window.devicePixelRatio || 1), r = cv.getBoundingClientRect(); CW = r.width; CH = r.height; cv.width = Math.round(CW * dpr); cv.height = Math.round(CH * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+  new ResizeObserver(size).observe(cv); size();
+  wave(); ui();
+
+  const cam = { yaw: 0.55, pitch: 0.24, dist: 1.7, ty: 0.26 };
+  let drag = null; const pts = new Map();
+  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); drag = {}; cv.style.cursor = 'grabbing'; });
+  cv.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return;
+    const prev = pts.get(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pts.size >= 2) { const [a, b] = [...pts.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (drag && drag.pd) cam.dist = clamp(cam.dist * drag.pd / d, 0.6, 3); drag = { pd: d }; return; }
+    cam.yaw -= (e.clientX - prev[0]) * 0.008; cam.pitch = clamp(cam.pitch + (e.clientY - prev[1]) * 0.005, 0.06, 0.8);
+  });
+  const up_ = e => { pts.delete(e.pointerId); if (!pts.size) { drag = null; cv.style.cursor = 'grab'; } };
+  cv.addEventListener('pointerup', up_); cv.addEventListener('pointercancel', up_);
+  cv.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist * (1 + Math.sign(e.deltaY) * 0.08), 0.6, 3); }, { passive: false });
+  $('zin').addEventListener('click', () => { cam.dist = clamp(cam.dist * 0.85, 0.6, 3); });
+  $('zout').addEventListener('click', () => { cam.dist = clamp(cam.dist / 0.85, 0.6, 3); });
+
+  let cy_, sy_, cp_, sp_, F_;
+  const setCam = () => { cy_ = Math.cos(cam.yaw); sy_ = Math.sin(cam.yaw); cp_ = Math.cos(cam.pitch); sp_ = Math.sin(cam.pitch); F_ = Math.min(CW, CH * 1.5) * 1.05; };
+  function P(x, y, z) {
+    const Y = y - cam.ty, x1 = x * cy_ - z * sy_, z1 = x * sy_ + z * cy_;
+    const y2 = Y * cp_ - z1 * sp_, z2 = Y * sp_ + z1 * cp_, zc = cam.dist - z2;
+    if (zc < 0.05) return null;
+    return [CW / 2 + F_ * x1 / zc, CH * 0.52 - F_ * y2 / zc, zc];
+  }
+
+  const R = 0.125, Ri = 0.11, NL = 36, NS = 18, LEN = 0.5, ga = Math.PI * (3 - Math.sqrt(5));
+  const leaves = [];
+  for (let i = 0; i < NL; i++) { const y = 1 - (i + 0.5) / NL * 2, r = Math.sqrt(1 - y * y), a = i * ga; leaves.push({ n: [Math.cos(a) * r, y, Math.sin(a) * r], ph: Math.random() * 6.28, len: LEN * (0.94 + Math.random() * 0.06), att: Array.from({ length: 30 }, () => ({ f: 0.06 + Math.random() * 0.92, o: Math.random() * 2 - 1, c: Math.random() })) }); }
+  const grains = []; for (let i = 0; i < 1400; i++) { const a = Math.random() * 6.28, rr = Math.sqrt(Math.random()) * 2.4; grains.push([Math.cos(a) * rr, Math.sin(a) * rr, Math.random()]); }
+  const parts = []; for (let i = 0; i < 160; i++) parts.push([(Math.random() - 0.5) * 3, Math.random() * 1.3, (Math.random() - 0.5) * 3]);
+  const fish = [];
+  for (let i = 0; i < 16; i++) fish.push({ kind: 'juv', L: 0.045 + Math.random() * 0.025, r: 0.13 + Math.random() * 0.24, h: 0.1 + Math.random() * 0.38, sp: (0.22 + Math.random() * 0.25) * (i % 3 ? 1 : -1), ph: Math.random() * 6.28, st: 1.2 + i * 0.1, en: 3.5 + Math.random() * 0.35, home: 0.4 + Math.random() * 1.2, pos: null, vel: [0, 0, 0], dir: [1, 0, 0], tail: Math.random() * 6 });
+  for (let i = 0; i < 5; i++) fish.push({ kind: 'sarpa', L: 0.16 + Math.random() * 0.05, r: 0.36 + Math.random() * 0.16, h: 0.26 + Math.random() * 0.22, sp: 0.1 + Math.random() * 0.07, ph: i * 1.25, st: 1.9 + i * 0.22, en: 3.55 + Math.random() * 0.25, home: 3.6 + i * 0.35, pos: null, vel: [0, 0, 0], dir: [1, 0, 0], tail: Math.random() * 6 });
+  const sticking = []; let stickT = 0;
+  const norm = v => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
+  const rotZ = (v, a) => [v[0] * Math.cos(a) - v[1] * Math.sin(a), v[0] * Math.sin(a) + v[1] * Math.cos(a), v[2]];
+  const mixC = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  const ALG = [226, 198, 122], BIO = [104, 150, 72];
+  const hist = [];
+
+  let t = 0, last = performance.now(), fc = 0;
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (!reduced || S.playW) t += dt;
+    if (S.playW) { S.week = Math.min(5, S.week + dt / 4); if (S.week >= 5) { S.playW = false; $('playW').textContent = 'Haftaları oynat'; } ui(); }
+    if (S.rot && !drag) cam.yaw += dt * 0.25;
+    setCam();
+    const wk = S.week, leafK = leafKf(wk), shellK = 1 - ss(4, 5, wk), bio = clamp(dens(wk) / 6.1e5) * (0.3 + 0.7 * leafK);
+    const SPEED = 2.2, ph = W.w * t * SPEED, u = Math.cos(ph) + 0.02 * Math.cos(2 * ph);
+    const uReal = W.U * u;
+    hist.push([t, uReal]); while (hist.length && hist[0][0] < t - 2 * T / SPEED) hist.shift();
+    const moving = W.F >= W.R && shellK > 0.05, floating = W.ws < W.U;
+    const exc = moving ? W.A * (floating ? 0.45 : 0.25) : 0;
+    const lift = moving ? W.lift * 0.05 * (0.6 + 0.4 * Math.abs(Math.sin(ph))) * (floating ? 1 : 0.15) : 0;
+    const spread = ss(4.2, 5, wk), syS = 1 - spread * 0.65, settle = ss(4, 5, wk);
+    const C = [exc * Math.sin(ph), (R + lift) * (1 - settle) + (Ri * syS + 0.002) * settle, 0];
+    const tilt = (moving ? -0.12 * Math.sin(ph) * (floating ? 0.6 : 1) : 0) * shellK;
+    const amp = clamp(W.U / 0.31, 0.2, 2.2);
+
+    // water
+    const hz = CH * 0.52 - F_ * Math.tan(cam.pitch);
+    let g = ctx.createLinearGradient(0, 0, 0, CH);
+    g.addColorStop(0, '#11506a'); g.addColorStop(clamp(hz / CH, 0.02, 0.98), '#0a3a4c'); g.addColorStop(1, '#0a3a4c');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, CW, CH);
+    ctx.save(); ctx.globalAlpha = 0.06; ctx.fillStyle = '#c9f4ff';
+    for (let i = 0; i < 5; i++) { const b = ((i * 0.23 * CW + Math.sin(t * 0.2 + i) * 30 - cam.yaw * 120) % (CW * 1.2) + CW * 1.2) % (CW * 1.2) - CW * 0.1; ctx.beginPath(); ctx.moveTo(b, 0); ctx.lineTo(b + 50, 0); ctx.lineTo(b + 170, Math.max(0, hz)); ctx.lineTo(b + 40, Math.max(0, hz)); ctx.fill(); }
+    ctx.restore();
+    // seabed: clear horizon, sand colour, ripples, grid
+    const hy = clamp(hz, -10, CH);
+    g = ctx.createLinearGradient(0, hy, 0, CH);
+    g.addColorStop(0, '#3e4a44'); g.addColorStop(0.12, '#6b5a42'); g.addColorStop(1, '#9a8461');
+    ctx.fillStyle = g; ctx.fillRect(0, hy, CW, CH - hy);
+    ctx.strokeStyle = 'rgba(160,220,230,.35)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(CW, hy); ctx.stroke();
+    ctx.lineWidth = 1;
+    for (let gx = -2; gx <= 2.001; gx += 0.25) {   // 25 cm grid
+      const a = P(gx, 0, -2.2), b = P(gx, 0, 2.2); if (!a || !b) continue;
+      ctx.strokeStyle = `rgba(240,225,190,${Math.abs(gx) < 0.01 ? 0.18 : 0.08})`; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    }
+    for (let gz = -2; gz <= 2.001; gz += 0.25) { const a = P(-2.2, 0, gz), b = P(2.2, 0, gz); if (!a || !b) continue; ctx.strokeStyle = 'rgba(240,225,190,.08)'; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+    // sand ripples (perpendicular to wave direction x)
+    ctx.strokeStyle = 'rgba(60,44,26,.35)'; ctx.lineWidth = 1.4;
+    for (let rx = -2; rx <= 2; rx += 0.09) { ctx.beginPath(); let started = false; for (let rz = -2; rz <= 2; rz += 0.2) { const q = P(rx + 0.015 * Math.sin(rz * 6), 0.001, rz); if (!q) { started = false; continue; } started ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); started = true; } ctx.stroke(); }
+    for (const [x, z, k] of grains) { const p = P(x, 0, z); if (!p) continue; const s = clamp(2.4 / p[2], 0.6, 2.6); ctx.fillStyle = k < 0.5 ? `rgba(40,30,16,${0.6 / p[2]})` : `rgba(230,210,170,${0.55 / p[2]})`; ctx.fillRect(p[0], p[1], s, s * 0.6); }
+    if (hy < CH - 120) { ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.fillStyle = 'rgba(240,228,200,.85)'; const lt = `DENİZ TABANI · ${S.D} m derinlik`; ctx.fillText(lt, CW - ctx.measureText(lt).width - 14, Math.max(hy + 20, 112)); }
+    const s1 = P(-0.75, 0.002, -0.1), s2 = P(-0.25, 0.002, -0.1);
+    if (s1 && s2) { ctx.strokeStyle = '#f4f8f6'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(s1[0], s1[1]); ctx.lineTo(s2[0], s2[1]); ctx.stroke(); ctx.fillStyle = '#f4f8f6'; ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.fillText('50 cm', (s1[0] + s2[0]) / 2 - 16, (s1[1] + s2[1]) / 2 - 8); }
+    for (const q of parts) { q[0] += uReal * 0.8 * dt * SPEED * 0.3 + 0.004 * dt; if (q[0] > 1.5) q[0] -= 3; if (q[0] < -1.5) q[0] += 3; const p = P(q[0], q[1], q[2]); if (p && p[1] < hy + 400) { ctx.fillStyle = 'rgba(207,238,230,.45)'; ctx.fillRect(p[0], p[1], 2, 2); } }
+
+    const pc = P(C[0], C[1], C[2]);
+    // shadow on seabed
+    if (pc && shellK > 0.05) { const sh = P(C[0], 0.001, C[2]); if (sh) { const rs = F_ * R / sh[2]; ctx.fillStyle = `rgba(20,14,8,${0.35 - lift * 2})`; ctx.beginPath(); ctx.ellipse(sh[0], sh[1], rs * 1.05, rs * 1.05 * Math.sin(cam.pitch + 0.15), 0, 0, 7); ctx.fill(); } }
+
+    // leaves
+    const drawList = [];
+    if (leafK > 0.02 && shellK > 0.05) for (const L of leaves) {
+      const n = rotZ(L.n, tilt);
+      let x = C[0] + n[0] * R, y = C[1] + n[1] * R, z = C[2] + n[2] * R, d = n.slice();
+      const segL = L.len * leafK / NS, p3 = [[x, y, z]];
+      for (let j = 1; j <= NS; j++) {
+        const s = j / NS, tg = norm([u * 0.85 * amp * (0.35 + s), 1, 0.12 * Math.sin(t * 1.3 + L.ph)]), k = 0.16 + 0.1 * s;
+        d = norm([d[0] + (tg[0] - d[0]) * k + 0.05 * Math.sin(t * 2.4 - j * 0.5 + L.ph) * amp, d[1] + (tg[1] - d[1]) * k, d[2] + (tg[2] - d[2]) * k]);
+        x += d[0] * segL; y += d[1] * segL; z += d[2] * segL; if (y < 0.004) y = 0.004; p3.push([x, y, z]);
+      }
+      const pr = p3.map(q => P(q[0], q[1], q[2])); if (pr.some(q => !q)) continue;
+      drawList.push({ L, li: leaves.indexOf(L), p3, pr, depth: pr.reduce((a, q) => a + q[2], 0) / pr.length, behind: P(C[0] + n[0] * R, C[1] + n[1] * R, C[2] + n[2] * R)[2] > pc[2] });
+    }
+    const col = mixC(ALG, BIO, bio * 0.85), la = 0.4 + 0.55 * leafK;
+    const drawLeaf = L => {
+      const w = clamp(F_ * 0.01 / L.depth, 1.2, 9); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.strokeStyle = `rgba(${Math.round(col[0] * 0.55)},${Math.round(col[1] * 0.55)},${Math.round(col[2] * 0.55)},${la})`; ctx.lineWidth = w + 1.2;
+      ctx.beginPath(); L.pr.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.stroke();
+      ctx.strokeStyle = `rgba(${col[0]},${col[1]},${col[2]},${la})`; ctx.lineWidth = w;
+      ctx.beginPath(); L.pr.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.stroke();
+      const tp = L.pr[L.pr.length - 1]; ctx.fillStyle = `rgba(243,227,181,${la})`; ctx.beginPath(); ctx.arc(tp[0], tp[1], clamp(F_ * 0.007 / tp[2], 1.5, 6), 0, 7); ctx.fill();
+      const nS = Math.floor(L.L.att.length * clamp(dens(wk) / 6.1e5));
+      for (let i = 0; i < nS; i++) {
+        const a = L.L.att[i], fi = a.f * (L.pr.length - 1), j = Math.min(L.pr.length - 2, Math.floor(fi)), fr = fi - j;
+        const q0 = L.pr[j], q1 = L.pr[j + 1], dx = q1[0] - q0[0], dy = q1[1] - q0[1], dl = Math.hypot(dx, dy) || 1;
+        const px = q0[0] + dx * fr - dy / dl * a.o * w * 0.4, py = q0[1] + dy * fr + dx / dl * a.o * w * 0.4;
+        ctx.fillStyle = a.c < 0.6 ? `rgba(46,104,40,${la})` : `rgba(120,92,36,${la})`;
+        ctx.beginPath(); ctx.arc(px, py, clamp(F_ * 0.0032 / q0[2], 1, 2.8), 0, 7); ctx.fill();
+      }
+    };
+    drawList.sort((a, b) => b.depth - a.depth);
+    drawList.filter(L => L.behind).forEach(drawLeaf);
+    const fishDraw = [];
+    fish.forEach(f => {
+      const active = wk >= f.st && wk <= f.en && leafK > 0.05;
+      let tx, ty, tz;
+      if (active) {
+        const ang = t * f.sp + f.ph, rr = f.r + Math.sin(t * 0.7 + f.ph) * 0.05;
+        tx = C[0] + Math.cos(ang) * rr; tz = Math.sin(ang) * rr; ty = f.h + 0.04 * Math.sin(t * 0.9 + f.ph);
+        if (f.kind === 'sarpa') { const pk = Math.max(0, Math.sin(t * 0.55 + f.ph)); tx -= Math.cos(ang) * pk * 0.16; tz -= Math.sin(ang) * pk * 0.16; }
+      } else { tx = Math.cos(f.home) * 3.4; tz = Math.sin(f.home) * 3.4; ty = f.h + 0.15; }
+      if (!f.pos) f.pos = [Math.cos(f.home) * 3.4, f.h + 0.15, Math.sin(f.home) * 3.4];
+      const k = f.kind === 'juv' ? 2.4 : 1.3, damp = f.kind === 'juv' ? 1.7 : 1.3, vmax = f.kind === 'juv' ? 0.5 : 0.32;
+      const tg = [tx, ty, tz];
+      for (let a = 0; a < 3; a++) f.vel[a] += ((tg[a] - f.pos[a]) * k - f.vel[a] * damp) * dt;
+      f.vel[0] += uReal * 0.25 * dt;
+      let sp = Math.hypot(f.vel[0], f.vel[1], f.vel[2]); if (sp > vmax) { f.vel = f.vel.map(v => v * vmax / sp); sp = vmax; }
+      f.pos = f.pos.map((v, a) => v + f.vel[a] * dt);
+      if (sp > 0.01) { const nd = norm(f.vel); f.dir = norm(f.dir.map((v, a) => v + (nd[a] - v) * Math.min(1, dt * 4))); }
+      f.tail += dt * (7 + sp * 26);
+      const dist = Math.hypot(f.pos[0] - C[0], f.pos[2]);
+      const alpha = clamp((3.1 - dist) / 0.8);
+      if (alpha <= 0.02) return;
+      const hd = P(f.pos[0] + f.dir[0] * f.L / 2, f.pos[1] + f.dir[1] * f.L / 2, f.pos[2] + f.dir[2] * f.L / 2);
+      const tl = P(f.pos[0] - f.dir[0] * f.L / 2, f.pos[1] - f.dir[1] * f.L / 2, f.pos[2] - f.dir[2] * f.L / 2);
+      if (hd && tl) fishDraw.push({ f, hd, tl, depth: (hd[2] + tl[2]) / 2, a: alpha });
+    });
+    const drawFish = o => {
+      const f = o.f, wpx = clamp(F_ * f.L * 0.2 / o.depth, 1.5, 30), full = F_ * f.L / o.depth;
+      let dx = o.hd[0] - o.tl[0], dy = o.hd[1] - o.tl[1]; const pl = Math.hypot(dx, dy);
+      const len = Math.max(pl, full * 0.78); if (pl < 0.5) { dx = 1; dy = 0; }
+      const an = Math.atan2(dy, dx);
+      ctx.save(); ctx.globalAlpha = o.a; ctx.translate((o.hd[0] + o.tl[0]) / 2, (o.hd[1] + o.tl[1]) / 2); ctx.rotate(an); if (Math.cos(an) < 0) ctx.scale(1, -1);
+      const sarpa = f.kind === 'sarpa';
+      const gr = ctx.createLinearGradient(0, -wpx, 0, wpx);
+      gr.addColorStop(0, sarpa ? '#6f8790' : '#5d7f8e'); gr.addColorStop(0.55, sarpa ? '#c9d4d6' : '#b8d3dc'); gr.addColorStop(1, '#eef4f4');
+      const tw = Math.sin(f.tail) * wpx * 0.55;
+      ctx.fillStyle = sarpa ? '#8da0a4' : '#7d9aa6';
+      ctx.beginPath(); ctx.moveTo(-len * 0.34, 0); ctx.lineTo(-len * 0.6, -wpx * 0.8 + tw); ctx.quadraticCurveTo(-len * 0.5, tw * 0.4, -len * 0.6, wpx * 0.8 + tw); ctx.closePath(); ctx.fill();
+      if (sarpa) { ctx.beginPath(); ctx.moveTo(len * 0.12, -wpx * 0.85); ctx.lineTo(-len * 0.18, -wpx * 1.25); ctx.lineTo(-len * 0.26, -wpx * 0.55); ctx.closePath(); ctx.fill(); }
+      ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(len * 0.5, wpx * 0.05);
+      ctx.bezierCurveTo(len * 0.38, -wpx * 1.05, -len * 0.18, -wpx * 0.95, -len * 0.38, -wpx * 0.18);
+      ctx.lineTo(-len * 0.38, wpx * 0.18);
+      ctx.bezierCurveTo(-len * 0.18, wpx * 0.95, len * 0.38, wpx * 1.0, len * 0.5, wpx * 0.05); ctx.fill();
+      if (sarpa) { ctx.strokeStyle = 'rgba(232,197,71,.9)'; ctx.lineWidth = Math.max(0.8, wpx * 0.12); for (const yy of [-0.42, -0.08, 0.26]) { ctx.beginPath(); ctx.moveTo(len * 0.36, yy * wpx); ctx.lineTo(-len * 0.32, yy * wpx * 0.7); ctx.stroke(); } }
+      ctx.fillStyle = '#0b1c22'; ctx.beginPath(); ctx.arc(len * 0.33, -wpx * 0.18, Math.max(0.8, wpx * 0.16), 0, 7); ctx.fill();
+      ctx.restore();
+    };
+    if (pc) fishDraw.filter(f => f.depth > pc[2]).sort((a, b) => b.depth - a.depth).forEach(drawFish);
+
+    if (pc) {
+      const rs = F_ * R / pc[2], ri = F_ * Ri / pc[2], capH = W.capH, th = Math.acos(clamp((Ri - capH) / Ri, -1, 1));
+      const ringY = C[1] - (Ri - capH) * syS, ringR = Ri * Math.sin(th) * (1 + spread * 1.2);
+      const ring = []; for (let i = 0; i < 32; i++) { const a = i / 32 * 6.2832; const q = P(C[0] + Math.cos(a) * ringR, ringY, C[2] + Math.sin(a) * ringR); if (q) ring.push(q); }
+      if (ring.length > 3) {
+        ctx.save();
+        if (shellK > 0.05) { ctx.beginPath(); ctx.arc(pc[0], pc[1], ri, 0, 7); ctx.clip(); }
+        const midY = ring.reduce((a, q) => a + q[1], 0) / ring.length;
+        ctx.fillStyle = '#b39c70'; if (shellK > 0.05) ctx.fillRect(pc[0] - ri, midY, ri * 2, ri * 2);
+        ctx.fillStyle = '#d9c597'; ctx.beginPath(); ring.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+      if (shellK > 0.03) {
+        ctx.globalAlpha = shellK;
+        const gr = ctx.createRadialGradient(pc[0] - rs * 0.35, pc[1] - rs * 0.4, rs * 0.1, pc[0], pc[1], rs);
+        gr.addColorStop(0, 'rgba(255,248,228,.45)'); gr.addColorStop(0.7, 'rgba(216,199,160,.28)'); gr.addColorStop(1, 'rgba(160,140,100,.5)');
+        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(pc[0], pc[1], rs, 0, 7); ctx.fill();
+        ctx.strokeStyle = 'rgba(241,227,194,.85)'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(pc[0], pc[1], rs, 0, 7); ctx.stroke();
+        for (let k = 0; k < 5; k++) {
+          const b = k * Math.PI / 5; let prev = null;
+          for (let i = 0; i <= 64; i++) {
+            const al = i / 64 * 6.2832; let v = rotZ([R * Math.sin(al) * Math.cos(b), R * Math.cos(al), R * Math.sin(al) * Math.sin(b)], tilt);
+            const q = P(C[0] + v[0], C[1] + v[1], C[2] + v[2]); if (!q) { prev = null; continue; }
+            if (prev) { const front = q[2] < pc[2]; ctx.strokeStyle = front ? 'rgba(241,227,194,.85)' : 'rgba(241,227,194,.25)'; ctx.lineWidth = front ? 1.6 : 1; ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(q[0], q[1]); ctx.stroke(); }
+            prev = q;
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
+    }
+    drawList.filter(L => !L.behind).forEach(drawLeaf);
+    const bioNow = clamp(dens(wk) / 6.1e5);
+    stickT += dt;
+    if (drawList.length && leafK > 0.1 && bioNow > 0.02 && bioNow < 0.995 && stickT > 0.08) {
+      stickT = 0; const D = drawList[Math.floor(Math.random() * drawList.length)];
+      const a = Math.random() * 6.28, b = Math.random() * 2 - 1, rr = 0.05 + Math.random() * 0.05;
+      sticking.push({ li: D.li, f: 0.1 + Math.random() * 0.85, off: [Math.cos(a) * Math.sqrt(1 - b * b) * rr, b * rr, Math.sin(a) * Math.sqrt(1 - b * b) * rr], age: 0 });
+    }
+    for (let i = sticking.length - 1; i >= 0; i--) {
+      const sp = sticking[i]; sp.age += dt; if (sp.age > 1.6) { sticking.splice(i, 1); continue; }
+      const D = drawList.find(d => d.li === sp.li); if (!D) continue;
+      const fi = sp.f * (D.p3.length - 1), j = Math.min(D.p3.length - 2, Math.floor(fi)), fr = fi - j, q0 = D.p3[j], q1 = D.p3[j + 1];
+      const e = Math.min(1, sp.age / 1.1), k = 1 - e * e * (3 - 2 * e);
+      const pos = [0, 1, 2].map(a => q0[a] + (q1[a] - q0[a]) * fr + sp.off[a] * k);
+      const pp = P(pos[0], pos[1], pos[2]); if (!pp) continue;
+      const al = sp.age < 1.1 ? 0.95 : 0.95 * (1 - (sp.age - 1.1) / 0.5);
+      ctx.fillStyle = `rgba(140,230,120,${al})`; ctx.beginPath(); ctx.arc(pp[0], pp[1], clamp(F_ * 0.004 / pp[2], 1.4, 3.2), 0, 7); ctx.fill();
+      if (sp.age > 1.05 && sp.age < 1.3) { ctx.strokeStyle = `rgba(160,240,140,${(1.3 - sp.age) * 3})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(pp[0], pp[1], 6 * (sp.age - 1.0) * 5, 0, 7); ctx.stroke(); }
+    }
+    if (bioNow > 0.06 && leafK > 0.1) {
+      const msg = '● Yeşil-kahve noktalar: yapraklara tutunan mikroalgler (diatom)';
+      ctx.font = '500 11.5px "IBM Plex Sans", sans-serif'; const mw = ctx.measureText(msg).width + 20;
+      const mx = Math.max(12, CW - mw - 12), my = CH - 112;
+      ctx.fillStyle = 'rgba(4,22,29,.82)'; ctx.fillRect(mx, my, mw, 24); ctx.strokeStyle = '#3e7a3a'; ctx.strokeRect(mx, my, mw, 24);
+      ctx.fillStyle = '#a6e08e'; ctx.fillText(msg, mx + 10, my + 16);
+    }
+    if (pc) fishDraw.filter(f => f.depth <= pc[2]).sort((a, b) => b.depth - a.depth).forEach(drawFish);
+
+    if ((fc = (fc + 1) % 5) === 0) {
+      const tau = (t * SPEED) % 12;
+      chart('cU', { x0: 0, x1: 12, y0: -0.8, y1: 0.8, xt: [0, 3, 6, 9, 12], xf: v => v + ' s', yt: [-0.6, -0.3, 0, 0.3, 0.6], yf: v => fmt(v, 1),
+        series: [{ p: rng(0, 12, 120, x => W.U * (Math.cos(W.w * x) + 0.02 * Math.cos(2 * W.w * x))), c: '#6fd3f0' }, { p: [[0, W.ws], [12, W.ws]], c: '#ff9e85', d: [4, 4], w: 1.2 }],
+        marks: [{ x: tau, y: uReal, c: '#e2c67a', v: true }] });
+    }
+    // in-view live wave chart (bottom-left)
+    const bw = Math.min(250, CW * 0.42), bh = 74, bx = 12, by = CH - bh - 12;
+    ctx.fillStyle = 'rgba(4,22,29,.82)'; ctx.fillRect(bx, by, bw, bh); ctx.strokeStyle = '#1b4552'; ctx.strokeRect(bx, by, bw, bh);
+    ctx.font = '500 10px "IBM Plex Mono", monospace'; ctx.fillStyle = '#8fb0aa'; ctx.fillText('DİP AKINTISI (canlı)', bx + 8, by + 13);
+    ctx.fillStyle = '#e2c67a'; ctx.fillText(`${uReal >= 0 ? '+' : '−'}${fmt(Math.abs(uReal), 2)} m/s`, bx + bw - 74, by + 13);
+    const gx0 = bx + 8, gw = bw - 16, gy = by + 44, ga_ = 22, um = Math.max(0.05, W.U * 1.1);
+    ctx.strokeStyle = '#1b4552'; ctx.beginPath(); ctx.moveTo(gx0, gy); ctx.lineTo(gx0 + gw, gy); ctx.stroke();
+    if (hist.length > 1) {
+      const t0 = t - 2 * T / SPEED;
+      ctx.strokeStyle = '#6fd3f0'; ctx.lineWidth = 1.8; ctx.beginPath();
+      hist.forEach(([ht, hu], i) => { const x = gx0 + (ht - t0) / (2 * T / SPEED) * gw, y = gy - hu / um * ga_; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke();
+      ctx.fillStyle = '#e2c67a'; ctx.beginPath(); ctx.arc(gx0 + gw, gy - uReal / um * ga_, 3.5, 0, 7); ctx.fill();
+    }
+    ctx.fillStyle = '#8fb0aa'; ctx.fillText(`F ${fmt(W.F, 1)} N · sürtünme ${fmt(W.R, 1)} N`, bx + 8, by + bh - 6);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
